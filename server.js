@@ -43,11 +43,8 @@ app.post('/api/payment/create-checkout', async (req, res) => {
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const domain = `${protocol}://${host}`;
 
-    // Vytvoření relace s povoleným Google Pay / kartami
+    // Stripe Checkout automaticky převezme metody nastavené v Dashboardu
     const session = await stripe.checkout.sessions.create({
-      automatic_payment_methods: {
-        enabled: true,
-      },
       line_items: [
         {
           price_data: {
