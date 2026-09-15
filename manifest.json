@@ -1,0 +1,18 @@
+{
+  "name": "Pouťová Střelnice",
+  "short_name": "Střelnice",
+  "description": "Klasická pouťová střelnice se vzduchovkou a papírovými růžemi.",
+  "start_url": "/?admin=strelnice2026",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#1a0f08",
+  "theme_color": "#8b1e0f",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%238b1e0f'/><circle cx='50' cy='50' r='35' fill='%23ffffff'/><circle cx='50' cy='50' r='25' fill='%238b1e0f'/><circle cx='50' cy='50' r='15' fill='%23ffffff'/><circle cx='50' cy='50' r='5' fill='%23e74c3c'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
