@@ -1,10 +1,27 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Pouťová střelnice / Fairground Shooting Gallery</title>
+
+  <!-- Nastavení PWA mobilní aplikace -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#8b1e0f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Střelnice">
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -546,7 +563,7 @@
       }
     }
 
-    // SPRÁVNÉ VYKRESLENÍ ZAMĚŘOVAČE (BEZ PROPOJENÍ LINEK)
+    // VYKRESLENÍ ZAMĚŘOVAČE
     const curX = crosshair.x + recoilOffset.x;
     const curY = crosshair.y + recoilOffset.y;
 
@@ -558,12 +575,12 @@
     ctx.arc(curX, curY, 18, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 2. Křížek
+    // 2. Křížek (vodorovná a svislá osa)
     ctx.beginPath();
     ctx.moveTo(curX - 26, curY);
     ctx.lineTo(curX + 26, curY);
     ctx.moveTo(curX, curY - 26);
-    ctx.lineTo(curX + 26, curY);
+    ctx.lineTo(curX, curY + 26);
     ctx.stroke();
 
     requestAnimationFrame(gameLoop);
@@ -601,7 +618,6 @@
   
   async function initiateStripeCheckout(ammoCount) {
     const statusEl = document.getElementById('shopStatus');
-    const originalText = statusEl.textContent;
     statusEl.textContent = i18n[currentLang].redirecting;
     statusEl.style.color = '#f1c40f';
 
