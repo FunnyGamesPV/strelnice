@@ -17,6 +17,54 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
+
+    /* Úvodní zamčená cedule pro veřejnost */
+    #lockScreen {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      background: #150d07;
+      background-image: radial-gradient(circle, #2c1a0e 0%, #120904 100%);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .lock-box {
+      background: #2b1b12;
+      border: 3px solid #8b5a2b;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+      border-radius: 12px;
+      padding: 35px 25px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+    .lock-box h1 {
+      color: #f39c12;
+      font-size: 26px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .lock-box p {
+      color: #ddd;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .lock-badge {
+      display: inline-block;
+      background: #412a1c;
+      color: #f1c40f;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #a3703c;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    /* Herní prostředí */
     header {
       width: 100%;
       max-width: 900px;
@@ -140,6 +188,16 @@
 </head>
 <body>
 
+  <!-- ZÁMEK / CEDULE PRO VEŘEJNOST -->
+  <div id="lockScreen">
+    <div class="lock-box">
+      <div style="font-size: 50px; margin-bottom: 10px;">🎯 🌹</div>
+      <h1>Pouťová střelnice</h1>
+      <p>Právě ladíme vzduchovky, navážíme papírové růže a zapojujeme platební bránu pro novou sezónu.</p>
+      <div class="lock-badge">Brzy otevíráme pro veřejnost</div>
+    </div>
+  </div>
+
   <header>
     <div class="stats">
       <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">3</span></div>
@@ -186,6 +244,19 @@
   </div>
 
 <script>
+  // Tajný klíč pro odemčení webu
+  const SECRET_ACCESS_KEY = 'strelnice2026';
+
+  function checkAccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === SECRET_ACCESS_KEY || localStorage.getItem('strelnice_unlocked') === 'true') {
+      localStorage.setItem('strelnice_unlocked', 'true');
+      const lockScreen = document.getElementById('lockScreen');
+      if (lockScreen) lockScreen.style.display = 'none';
+    }
+  }
+  checkAccess();
+
   const i18n = {
     cs: {
       ammo: "Broky",
@@ -251,7 +322,6 @@
     setLanguage(currentLang === 'cs' ? 'en' : 'cs');
   }
 
-  // Audio efekty
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -294,7 +364,6 @@
     targetRoses = [];
     wonRoses = [];
 
-    // 10 malých růží (1 špejle)
     for (let i = 0; i < 10; i++) {
       const x = 70 + i * 95;
       const color = ROSE_COLORS[Math.floor(Math.random() * ROSE_COLORS.length)];
@@ -305,7 +374,6 @@
       });
     }
 
-    // 3 střední růže (3 špejle)
     for (let i = 0; i < 3; i++) {
       const x = 220 + i * 280;
       const color = ROSE_COLORS[Math.floor(Math.random() * ROSE_COLORS.length)];
@@ -320,7 +388,6 @@
       });
     }
 
-    // 1 velká růže (5 špejlí)
     const bigColor = ROSE_COLORS[Math.floor(Math.random() * ROSE_COLORS.length)];
     targetRoses.push({
       type: 'large', color: bigColor, x: 500, y: 160, radius: 46,
@@ -352,13 +419,11 @@
     ammo--;
     playSound('shot');
 
-    // Lehký rozptyl vzduchovky
     const spreadX = (Math.random() - 0.5) * 14;
     const spreadY = (Math.random() - 0.5) * 14;
     const hitX = targetX + spreadX;
     const hitY = targetY + spreadY;
 
-    // Zpětný ráz
     recoilOffset.y = -15;
     recoilOffset.x = (Math.random() - 0.5) * 8;
 
@@ -391,7 +456,6 @@
     if (allCleared) {
       setTimeout(openEndScreen, 800);
     } else if (ammo === 0) {
-      // Došly broky: otevřeme rovnou pokladnu na dokoupení
       setTimeout(() => {
         if (ammo === 0) openShop();
       }, 500);
@@ -478,7 +542,7 @@
     ctx.moveTo(curX - 26, curY);
     ctx.lineTo(curX + 26, curY);
     ctx.moveTo(curX, curY - 26);
-    ctx.lineTo(curX, curY + 26);
+    ctx.lineTo(curX + 26, curY);
     ctx.stroke();
 
     requestAnimationFrame(gameLoop);
@@ -514,7 +578,6 @@
   function openShop() { document.getElementById('shopModal').style.display = 'flex'; }
   function closeShop() { document.getElementById('shopModal').style.display = 'none'; }
   
-  // Nákupní logika s balíčky (10 za 10, 25 za 20, 50 za 40)
   function buyAmmo(amount, price) {
     ammo += amount;
     spent += price;
