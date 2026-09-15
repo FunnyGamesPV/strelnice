@@ -16,11 +16,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
-// Ceník balíčků broků
+// Ceník balíčků broků (minimum pro Stripe v CZK je 15 Kč)
 const PACKAGES = {
-  10: { amount: 10, priceCzk: 10, name: '10 broků do vzduchovky' },
-  25: { amount: 25, priceCzk: 20, name: '25 broků do vzduchovky' },
-  50: { amount: 50, priceCzk: 40, name: '50 broků do vzduchovky' }
+  10: { amount: 10, priceCzk: 15, name: '10 broků do vzduchovky' },
+  25: { amount: 25, priceCzk: 25, name: '25 broků do vzduchovky' },
+  50: { amount: 50, priceCzk: 45, name: '50 broků do vzduchovky' }
 };
 
 app.post('/api/payment/create-checkout', async (req, res) => {
