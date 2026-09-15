@@ -546,25 +546,35 @@
       }
     }
 
-    // SPRÁVNÉ VYKRESLENÍ ZAMĚŘOVAČE (BEZ PROPOJENÍ LINEK)
+    // DOKONALÝ ZAMĚŘOVAČ: kruh + vodorovný a svislý kříž
     const curX = crosshair.x + recoilOffset.x;
     const curY = crosshair.y + recoilOffset.y;
 
     ctx.strokeStyle = '#e74c3c';
     ctx.lineWidth = 2;
 
-    // 1. Kolečko
+    // 1. Červený kroužek
     ctx.beginPath();
     ctx.arc(curX, curY, 18, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 2. Křížek
+    // 2. Vodorovná osa (zleva doprava)
     ctx.beginPath();
     ctx.moveTo(curX - 26, curY);
     ctx.lineTo(curX + 26, curY);
-    ctx.moveTo(curX, curY - 26);
-    ctx.lineTo(curX + 26, curY);
     ctx.stroke();
+
+    // 3. Svislá osa (shora dolů)
+    ctx.beginPath();
+    ctx.moveTo(curX, curY - 26);
+    ctx.lineTo(curX, curY + 26);
+    ctx.stroke();
+
+    // 4. Středová tečka pro přesné míření
+    ctx.beginPath();
+    ctx.arc(curX, curY, 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fill();
 
     requestAnimationFrame(gameLoop);
   }
