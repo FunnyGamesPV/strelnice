@@ -35,51 +35,6 @@
       overflow-x: hidden;
     }
 
-    #lockScreen {
-      display: flex;
-      position: fixed;
-      inset: 0;
-      background: #150d07;
-      background-image: radial-gradient(circle, #2c1a0e 0%, #120904 100%);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .lock-box {
-      background: #2b1b12;
-      border: 3px solid #8b5a2b;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-      border-radius: 12px;
-      padding: 35px 25px;
-      max-width: 520px;
-      width: 100%;
-      text-align: center;
-    }
-    .lock-box h1 {
-      color: #f39c12;
-      font-size: 26px;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .lock-box p {
-      color: #ddd;
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .lock-badge {
-      display: inline-block;
-      background: #412a1c;
-      color: #f1c40f;
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 1px solid #a3703c;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
     header {
       width: 100%;
       max-width: 900px;
@@ -204,15 +159,6 @@
 </head>
 <body>
 
-  <div id="lockScreen">
-    <div class="lock-box">
-      <div style="font-size: 50px; margin-bottom: 10px;">🎯 🌹</div>
-      <h1>Pouťová střelnice</h1>
-      <p>Právě ladíme vzduchovky, navážíme papírové růže a zapojujeme platební bránu pro novou sezónu.</p>
-      <div class="lock-badge">Brzy otevíráme pro veřejnost</div>
-    </div>
-  </div>
-
   <header>
     <div class="stats">
       <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">3</span></div>
@@ -257,18 +203,6 @@
   </div>
 
 <script>
-  const SECRET_ACCESS_KEY = 'strelnice2026';
-
-  function checkAccess() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('admin') === SECRET_ACCESS_KEY || localStorage.getItem('strelnice_unlocked') === 'true') {
-      localStorage.setItem('strelnice_unlocked', 'true');
-      const lockScreen = document.getElementById('lockScreen');
-      if (lockScreen) lockScreen.style.display = 'none';
-    }
-  }
-  checkAccess();
-
   const i18n = {
     cs: {
       ammo: "Broky",
@@ -382,7 +316,7 @@
       ammo += addedAmmo;
       spent += addedSpent;
       saveSession();
-      window.history.replaceState({}, document.title, window.location.pathname + '?admin=strelnice2026');
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
@@ -563,19 +497,16 @@
       }
     }
 
-    // VYKRESLENÍ ZAMĚŘOVAČE
     const curX = crosshair.x + recoilOffset.x;
     const curY = crosshair.y + recoilOffset.y;
 
     ctx.strokeStyle = '#e74c3c';
     ctx.lineWidth = 2;
 
-    // 1. Kolečko
     ctx.beginPath();
     ctx.arc(curX, curY, 18, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 2. Křížek (vodorovná a svislá osa)
     ctx.beginPath();
     ctx.moveTo(curX - 26, curY);
     ctx.lineTo(curX + 26, curY);
