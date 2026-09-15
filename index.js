@@ -24,13 +24,15 @@ const PACKAGES = {
 
 app.post('/api/payment/create-checkout', async (req, res) => {
   try {
+    const { ammoCount } = req.body;
+    console.log(`Požadavek na nákup: ${ammoCount} broků`);
+
     if (!stripeKey || stripeKey.startsWith('sk_test_placeholder')) {
+      console.error('Chybí STRIPE_SECRET_KEY v proměnných prostředí Renderu!');
       return res.status(500).json({ error: 'Není nastaven platný STRIPE_SECRET_KEY v Renderu!' });
     }
 
-    const { ammoCount } = req.body;
     const selectedPack = PACKAGES[ammoCount];
-
     if (!selectedPack) {
       return res.status(400).json({ error: 'Neplatný balíček broků' });
     }
@@ -49,7 +51,7 @@ app.post('/api/payment/create-checkout', async (req, res) => {
               name: selectedPack.name,
               description: 'Pouťová střelnice - střelivo',
             },
-            unit_amount: selectedPack.priceCzk * 100, // haléře
+            unit_amount: selectedPack.priceCzk * 100, // částka v haléřích
           },
           quantity: 1,
         },
@@ -59,9 +61,10 @@ app.post('/api/payment/create-checkout', async (req, res) => {
       cancel_url: `${domain}/?admin=strelnice2026&payment=cancelled`,
     });
 
+    console.log('Stripe session vytvořena:', session.url);
     res.json({ checkoutUrl: session.url });
   } catch (error) {
-    console.error('Chyba Stripe:', error);
+    console.error('Chyba Stripe:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
