@@ -161,7 +161,7 @@
 
   <header>
     <div class="stats">
-      <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">3</span></div>
+      <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">0</span></div>
       <div class="stat-badge"><span data-i18n="spent">Útrata</span>: <span id="spentCount" style="color: #e67e22;">0</span> <span data-i18n="currency">Kč</span></div>
       <div class="stat-badge"><span data-i18n="won">Získáno</span>: <span id="wonCount" style="color: #2ecc71;">0</span></div>
     </div>
@@ -300,11 +300,18 @@
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
-  // BEZPEČNÉ NAČTENÍ BROKŮ: Pokud v paměti už hodnota je (i kdyby 0), použije se přesně ona.
-  // 3 broky se dají pouze hráči, který hru otevřel úplně poprvé!
-  let ammo = sessionStorage.getItem('strelnice_ammo') !== null 
-    ? parseInt(sessionStorage.getItem('strelnice_ammo')) 
-    : 3;
+  // TRVALÁ OCHRANA: 3 broky zdarma se dají pouze 1× v životě hráče!
+  let ammo = 0;
+  if (!localStorage.getItem('strelnice_has_played_before')) {
+    localStorage.setItem('strelnice_has_played_before', 'true');
+    ammo = 3;
+    sessionStorage.setItem('strelnice_ammo', '3');
+  } else {
+    ammo = sessionStorage.getItem('strelnice_ammo') !== null 
+      ? parseInt(sessionStorage.getItem('strelnice_ammo')) 
+      : 0;
+  }
+
   let spent = parseInt(sessionStorage.getItem('strelnice_spent')) || 0;
   let wonRoses = JSON.parse(sessionStorage.getItem('strelnice_won') || '[]');
   let targetRoses = [];
@@ -322,7 +329,6 @@
       saveSession();
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (params.get('payment') === 'cancelled') {
-      // Pokud hráč platbu zrušil, smažeme parametr a otevřeme mu rovnou pokladnu
       window.history.replaceState({}, document.title, window.location.pathname);
       if (ammo <= 0) setTimeout(openShop, 200);
     }
@@ -663,14 +669,15 @@
     link.click();
   }
 
+  // PŘI NOVÉ HŘE: Terče se obnoví, ale pokud už nemá broky, zůstane na nule a vyskočí pokladna!
   function restartGame() {
-    sessionStorage.clear();
     closeEndScreen();
-    spent = 0;
-    ammo = 3;
     wonRoses = [];
-    saveSession();
+    sessionStorage.setItem('strelnice_won', '[]');
     initTargets();
+    if (ammo <= 0) {
+      setTimeout(openShop, 300);
+    }
   }
 
   handlePaymentReturn();
@@ -678,7 +685,6 @@
   initTargets();
   gameLoop();
 
-  // Pokud se hráč vrátí z platební brány bez střeliva, ihned otevřeme pokladnu
   if (ammo <= 0) {
     setTimeout(openShop, 300);
   }
