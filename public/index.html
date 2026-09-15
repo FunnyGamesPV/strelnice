@@ -1,736 +1,419 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌹</text></svg>">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pouťová střelnice / Fairground Shooting Gallery</title>
+  <title>Pouťová Střelnice</title>
+
+  <!-- PWA Mobilní aplikace -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#8b1e0f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Střelnice">
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
     body {
-      background: #1a110b;
+      background: #110803;
       color: #fff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    #lockScreen {
-      display: flex;
-      position: fixed;
-      inset: 0;
-      background: #150d07;
-      background-image: radial-gradient(circle, #2c1a0e 0%, #120904 100%);
-      z-index: 9999;
       justify-content: center;
-      align-items: center;
-      padding: 20px;
+      min-height: 100vh;
+      overflow: hidden;
     }
-    .lock-box {
-      background: #2b1b12;
-      border: 3px solid #8b5a2b;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-      border-radius: 12px;
-      padding: 35px 25px;
-      max-width: 520px;
-      width: 100%;
-      text-align: center;
-    }
-    .lock-box h1 {
-      color: #f39c12;
-      font-size: 26px;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .lock-box p {
-      color: #ddd;
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .lock-badge {
-      display: inline-block;
-      background: #412a1c;
-      color: #f1c40f;
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 1px solid #a3703c;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    header {
-      width: 100%;
-      max-width: 900px;
-      padding: 10px 15px;
-      background: #2b1b12;
-      border-bottom: 3px solid #8b5a2b;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .stats {
-      display: flex;
-      gap: 12px;
-      font-size: 14px;
-      font-weight: bold;
-      flex-wrap: wrap;
-    }
-    .stat-badge {
-      background: #412a1c;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #a3703c;
-    }
-    .actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    button {
-      background: #c0392b;
-      color: #fff;
-      border: 1px solid #f39c12;
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.15s;
-    }
-    button:hover { background: #e74c3c; }
-    button:disabled { opacity: 0.6; cursor: wait; }
-    button.finish-btn { background: #27ae60; border-color: #2ecc71; }
-    button.finish-btn:hover { background: #2ecc71; }
-    .lang-btn { background: #50311c; border-color: #8b5a2b; }
-    .lang-btn:hover { background: #694025; }
-    
-    #canvas-container {
+    #game-container {
       position: relative;
-      width: 100%;
-      max-width: 900px;
-      aspect-ratio: 16 / 10;
-      margin-top: 10px;
-      touch-action: none;
-      cursor: crosshair;
+      border: 6px solid #4a1c0d;
+      border-radius: 8px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.8);
+      background: #2b1d0c;
     }
     canvas {
-      width: 100%;
-      height: 100%;
       display: block;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-      background: #111;
+      cursor: crosshair;
     }
-
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      justify-content: center;
+    #ui-bar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px #000;
+    }
+    .hud-badge {
+      background: rgba(0,0,0,0.6);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #d4af37;
+      display: flex;
       align-items: center;
-      padding: 15px;
+      gap: 6px;
+    }
+    #lock-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10,5,3,0.94);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       z-index: 100;
-    }
-    .modal-content {
-      background: #2b1b12;
-      border: 2px solid #a3703c;
-      padding: 20px;
-      border-radius: 12px;
-      max-width: 450px;
-      width: 100%;
       text-align: center;
+      padding: 20px;
     }
-    .modal h2 { margin-bottom: 12px; color: #f39c12; }
-    .shop-options {
+    #lock-overlay h2 {
+      font-size: 32px;
+      color: #e74c3c;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    #lock-overlay p {
+      font-size: 18px;
+      margin-bottom: 24px;
+      color: #ddd;
+    }
+    .store-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .buy-btn {
+      background: linear-gradient(135deg, #c0392b, #8b1e0f);
+      border: 2px solid #f1c40f;
+      color: #fff;
+      padding: 14px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      transition: transform 0.1s, background 0.2s;
+    }
+    .buy-btn:hover {
+      transform: scale(1.04);
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    #admin-gate {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #110803;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin: 15px 0;
-    }
-    .shop-btn {
-      background: #50311c;
-      font-size: 15px;
-      padding: 12px;
-      border-radius: 8px;
-    }
-    .shop-btn:hover { background: #694025; }
-
-    #cardCanvas {
-      width: 100%;
-      max-width: 380px;
-      aspect-ratio: 4 / 5;
-      border-radius: 8px;
-      margin: 12px auto;
-      display: block;
-      background: #fff;
-    }
-    textarea {
-      width: 100%;
-      height: 60px;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #a3703c;
-      font-family: inherit;
-      resize: none;
-      font-size: 14px;
-      margin-bottom: 12px;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      text-align: center;
+      padding: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div id="lockScreen">
-    <div class="lock-box">
-      <div style="font-size: 50px; margin-bottom: 10px;">🎯 🌹</div>
-      <h1>Pouťová střelnice</h1>
-      <p>Právě ladíme vzduchovky, navážíme papírové růže a zapojujeme platební bránu pro novou sezónu.</p>
-      <div class="lock-badge">Brzy otevíráme pro veřejnost</div>
-    </div>
+  <div id="admin-gate" style="display: none;">
+    <h1 style="color: #e74c3c; margin-bottom: 15px;">STŘELNICE MIMO PROVOZ</h1>
+    <p style="color: #ccc; max-width: 400px; line-height: 1.5;">Provoz střelnice je v tuto chvíli vyhrazen pro zvané hosty. Pro přístup použijte autorizační odkaz.</p>
   </div>
 
-  <header>
-    <div class="stats">
-      <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">3</span></div>
-      <div class="stat-badge"><span data-i18n="spent">Útrata</span>: <span id="spentCount" style="color: #e67e22;">0</span> <span data-i18n="currency">Kč</span></div>
-      <div class="stat-badge"><span data-i18n="won">Získáno</span>: <span id="wonCount" style="color: #2ecc71;">0</span></div>
+  <div id="game-container">
+    <canvas id="canvas" width="800" height="500"></canvas>
+    
+    <div id="ui-bar">
+      <div class="hud-badge">🎯 Broky: <span id="ammo-count">3</span></div>
+      <div class="hud-badge">🌹 Růže: <span id="rose-count">0</span></div>
+      <div class="hud-badge">💰 Útrata: <span id="spent-count">0</span> Kč</div>
     </div>
-    <div class="actions">
-      <button class="lang-btn" onclick="toggleLanguage()" id="langBtn">EN</button>
-      <button onclick="openShop()" data-i18n="buyBtn">Koupit broky</button>
-      <button class="finish-btn" onclick="openEndScreen()" data-i18n="finishBtn">Ukončit a darovat</button>
-    </div>
-  </header>
 
-  <div id="canvas-container">
-    <canvas id="gameCanvas" width="1000" height="625"></canvas>
-  </div>
-
-  <div class="modal" id="shopModal">
-    <div class="modal-content">
-      <h2 data-i18n="shopTitle">Pokladna střelnice</h2>
-      <p id="shopStatus" data-i18n="shopSubtitle" style="color: #e0d0b8; margin-bottom: 15px; font-size: 14px;">Vyberte si balíček střeliva:</p>
-      <div class="shop-options">
-        <button class="shop-btn" onclick="initiateStripeCheckout(10)"><span data-i18n="buy10">10 broků – 15 Kč</span></button>
-        <button class="shop-btn" onclick="initiateStripeCheckout(25)"><span data-i18n="buy25">25 broků – 25 Kč</span></button>
-        <button class="shop-btn" onclick="initiateStripeCheckout(50)"><span data-i18n="buy50">50 broků – 45 Kč</span></button>
-      </div>
-      <button onclick="closeShop()" style="background:#555; border-color:#777;" data-i18n="backBtn">Zpět ke střelbě</button>
-    </div>
-  </div>
-
-  <div class="modal" id="giftModal">
-    <div class="modal-content" style="max-width: 480px;">
-      <h2 data-i18n="cardTitle">Tvoje vystřelené růže</h2>
-      <canvas id="cardCanvas" width="400" height="500"></canvas>
-      <textarea id="giftMessage" oninput="drawCard()"></textarea>
-      <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-        <button class="finish-btn" onclick="downloadCard()" data-i18n="downloadBtn">Stáhnout obrázek</button>
-        <button onclick="closeEndScreen()" style="background:#555; border-color:#777;" data-i18n="backBtn">Zpět</button>
-        <button onclick="restartGame()" style="background:#c0392b;" data-i18n="restartBtn">Nová hra</button>
+    <div id="lock-overlay">
+      <h2>Došly ti broky!</h2>
+      <p>Kup si další střelivo a tref své růže:</p>
+      <div class="store-grid">
+        <button class="buy-btn" onclick="buyAmmo(10)">10 broků / 15 Kč</button>
+        <button class="buy-btn" onclick="buyAmmo(25)">25 broků / 25 Kč</button>
+        <button class="buy-btn" onclick="buyAmmo(50)">50 broků / 45 Kč</button>
       </div>
     </div>
   </div>
 
-<script>
-  const SECRET_ACCESS_KEY = 'strelnice2026';
-
-  function checkAccess() {
+  <script>
+    // 1. Zabezpečení střelnice přes tajný parametr ?admin=strelnice2026
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('admin') === SECRET_ACCESS_KEY || localStorage.getItem('strelnice_unlocked') === 'true') {
-      localStorage.setItem('strelnice_unlocked', 'true');
-      const lockScreen = document.getElementById('lockScreen');
-      if (lockScreen) lockScreen.style.display = 'none';
-    }
-  }
-  checkAccess();
-
-  const i18n = {
-    cs: {
-      ammo: "Broky",
-      spent: "Útrata",
-      won: "Získáno",
-      currency: "Kč",
-      buyBtn: "Koupit broky",
-      finishBtn: "Ukončit a darovat",
-      shopTitle: "Pokladna střelnice",
-      shopSubtitle: "Vyberte si balíček střeliva:",
-      buy10: "10 broků – 15 Kč",
-      buy25: "25 broků – 25 Kč",
-      buy50: "50 broků – 45 Kč",
-      backBtn: "Zpět",
-      cardTitle: "Tvoje vystřelené růže",
-      downloadBtn: "Stáhnout obrázek",
-      restartBtn: "Nová hra",
-      defaultDedication: "Stříleno z lásky na pouti ❤️",
-      cardFooter: "Vystřeleno z pouťové vzduchovky",
-      noRoses: "Zatím jsi netrefil žádnou růži...",
-      redirecting: "Přesměrovávám na zabezpečenou pokladnu Stripe...",
-      errorPayment: "Chyba platby: "
-    },
-    en: {
-      ammo: "Pellets",
-      spent: "Spent",
-      won: "Won",
-      currency: "CZK",
-      buyBtn: "Buy Pellets",
-      finishBtn: "Finish & Gift",
-      shopTitle: "Shooting Gallery Cashier",
-      shopSubtitle: "Choose your ammo pack:",
-      buy10: "10 pellets – 15 CZK",
-      buy25: "25 pellets – 25 CZK",
-      buy50: "50 pellets – 45 CZK",
-      backBtn: "Back",
-      cardTitle: "Your Won Roses",
-      downloadBtn: "Download Image",
-      restartBtn: "New Game",
-      defaultDedication: "Shot with love at the fairground ❤️",
-      cardFooter: "Shot with a fairground air rifle",
-      noRoses: "No roses hit yet...",
-      redirecting: "Redirecting to secure Stripe checkout...",
-      errorPayment: "Payment error: "
-    }
-  };
-
-  let currentLang = 'cs';
-
-  function setLanguage(lang) {
-    currentLang = lang;
-    document.getElementById('langBtn').textContent = lang === 'cs' ? 'EN' : 'CZ';
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if (i18n[lang][key]) el.textContent = i18n[lang][key];
-    });
-    const messageInput = document.getElementById('giftMessage');
-    if (!messageInput.value || messageInput.value === i18n.cs.defaultDedication || messageInput.value === i18n.en.defaultDedication) {
-      messageInput.value = i18n[lang].defaultDedication;
-    }
-    drawCard();
-  }
-
-  function toggleLanguage() {
-    setLanguage(currentLang === 'cs' ? 'en' : 'cs');
-  }
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playSound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    
-    if (type === 'shot') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(320, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.11);
-    } else if (type === 'hit') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(750, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.09);
-    }
-  }
-
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-
-  let ammo = parseInt(sessionStorage.getItem('strelnice_ammo')) || 3;
-  let spent = parseInt(sessionStorage.getItem('strelnice_spent')) || 0;
-  let wonRoses = JSON.parse(sessionStorage.getItem('strelnice_won') || '[]');
-  let targetRoses = [];
-  let crosshair = { x: 500, y: 312 };
-  let recoilOffset = { x: 0, y: 0 };
-  const ROSE_COLORS = ['#e74c3c', '#f1c40f', '#e84393', '#3498db', '#9b59b6', '#e67e22'];
-
-  function handlePaymentReturn() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success') {
-      const addedAmmo = parseInt(params.get('ammo')) || 0;
-      const addedSpent = parseInt(params.get('spent')) || 0;
-      ammo += addedAmmo;
-      spent += addedSpent;
-      saveSession();
-      window.history.replaceState({}, document.title, window.location.pathname + '?admin=strelnice2026');
-    }
-  }
-
-  function saveSession() {
-    sessionStorage.setItem('strelnice_ammo', ammo);
-    sessionStorage.setItem('strelnice_spent', spent);
-    sessionStorage.setItem('strelnice_won', JSON.stringify(wonRoses));
-  }
-
-  function initTargets() {
-    targetRoses = [];
-    for (let i = 0; i < 10; i++) {
-      const x = 70 + i * 95;
-      const color = ROSE_COLORS[Math.floor(Math.random() * ROSE_COLORS.length)];
-      targetRoses.push({
-        type: 'small', color, x, y: 480, radius: 18,
-        sticks: [{ x, yTop: 498, yBottom: 565, broken: false }],
-        isFallen: false, fallProgress: 0
-      });
+    if (urlParams.get('admin') !== 'strelnice2026') {
+      document.getElementById('admin-gate').style.display = 'flex';
+      document.getElementById('game-container').style.display = 'none';
+      throw new Error('Nepovolený přístup');
     }
 
-    for (let i = 0; i < 3; i++) {
-      const x = 220 + i * 280;
-      const color = ROSE_COLORS[Math.floor(Math.random() * ROSE_COLORS.length)];
-      targetRoses.push({
-        type: 'medium', color, x, y: 320, radius: 30,
-        sticks: [
-          { x: x - 18, yTop: 350, yBottom: 425, broken: false },
-          { x: x,      yTop: 350, yBottom: 425, broken: false },
-          { x: x + 18, yTop: 350, yBottom: 425, broken: false }
-        ],
-        isFallen: false, fallProgress: 0
-      });
+    // 2. Stav hry a načtení po návratu z pokladny
+    let ammo = parseInt(sessionStorage.getItem('strelnice_ammo')) || 3;
+    let spent = parseInt(sessionStorage.getItem('strelnice_spent')) || 0;
+    let rosesWon = parseInt(sessionStorage.getItem('strelnice_roses')) || 0;
+
+    function handlePaymentReturn() {
+      if (urlParams.get('payment') === 'success') {
+        const addedAmmo = parseInt(urlParams.get('ammo')) || 10;
+        const addedSpent = parseInt(urlParams.get('spent')) || 15;
+        ammo += addedAmmo;
+        spent += addedSpent;
+        sessionStorage.setItem('strelnice_ammo', ammo);
+        sessionStorage.setItem('strelnice_spent', spent);
+        window.history.replaceState({}, document.title, window.location.pathname + '?admin=strelnice2026');
+      }
+    }
+    handlePaymentReturn();
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const ammoDisplay = document.getElementById('ammo-count');
+    const roseDisplay = document.getElementById('rose-count');
+    const spentDisplay = document.getElementById('spent-count');
+    const lockOverlay = document.getElementById('lock-overlay');
+
+    function updateHud() {
+      ammoDisplay.innerText = ammo;
+      roseDisplay.innerText = rosesWon;
+      spentDisplay.innerText = spent;
+      sessionStorage.setItem('strelnice_ammo', ammo);
+      sessionStorage.setItem('strelnice_roses', rosesWon);
+      sessionStorage.setItem('strelnice_spent', spent);
+
+      if (ammo <= 0) {
+        lockOverlay.style.display = 'flex';
+      } else {
+        lockOverlay.style.display = 'none';
+      }
     }
 
-    const bigColor = ROSE_COLORS[Math.floor(Math.random() * ROSE_COLORS.length)];
-    targetRoses.push({
-      type: 'large', color: bigColor, x: 500, y: 160, radius: 46,
-      sticks: [
-        { x: 464, yTop: 205, yBottom: 290, broken: false },
-        { x: 482, yTop: 205, yBottom: 290, broken: false },
-        { x: 500, yTop: 205, yBottom: 290, broken: false },
-        { x: 518, yTop: 205, yBottom: 290, broken: false },
-        { x: 536, yTop: 205, yBottom: 290, broken: false }
-      ],
-      isFallen: false, fallProgress: 0
-    });
+    // 3. Herní objekty (Špejle s růžemi)
+    class RoseTarget {
+      constructor(x, y, roseType) {
+        this.x = x;
+        this.y = y;
+        this.stemHeight = 140;
+        this.roseType = roseType; // 'red', 'yellow', 'white'
+        this.hitsLeft = 3;
+        this.isFallen = false;
+        this.fallSpeed = 0;
+      }
 
-    updateStats();
-  }
-
-  function updateStats() {
-    document.getElementById('ammoCount').textContent = ammo;
-    document.getElementById('spentCount').textContent = spent;
-    document.getElementById('wonCount').textContent = wonRoses.length;
-    saveSession();
-  }
-
-  function shoot(targetX, targetY) {
-    if (ammo <= 0) {
-      openShop();
-      return;
-    }
-
-    ammo--;
-    playSound('shot');
-
-    const spreadX = (Math.random() - 0.5) * 14;
-    const spreadY = (Math.random() - 0.5) * 14;
-    const hitX = targetX + spreadX;
-    const hitY = targetY + spreadY;
-
-    recoilOffset.y = -15;
-    recoilOffset.x = (Math.random() - 0.5) * 8;
-
-    let hitSomething = false;
-    for (const rose of targetRoses) {
-      if (rose.isFallen) continue;
-
-      for (const stick of rose.sticks) {
-        if (stick.broken) continue;
-
-        if (hitX >= stick.x - 6 && hitX <= stick.x + 6 &&
-            hitY >= stick.yTop && hitY <= stick.yBottom) {
-          stick.broken = true;
-          hitSomething = true;
-          playSound('hit');
-          break;
+      draw() {
+        if (this.isFallen) {
+          this.y += this.fallSpeed;
+          this.fallSpeed += 0.4;
+          if (this.y > 600) return;
         }
+
+        // Špejle
+        ctx.strokeStyle = '#d2b48c';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x, this.y + this.stemHeight);
+        ctx.stroke();
+
+        // Záseky na špejli (zásahy)
+        if (this.hitsLeft < 3) {
+          ctx.strokeStyle = '#3a1f04';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(this.x - 5, this.y + 70);
+          ctx.lineTo(this.x + 5, this.y + 70);
+          ctx.stroke();
+        }
+        if (this.hitsLeft < 2) {
+          ctx.beginPath();
+          ctx.moveTo(this.x - 5, this.y + 80);
+          ctx.lineTo(this.x + 5, this.y + 80);
+          ctx.stroke();
+        }
+
+        // Papírová růže nahoře
+        ctx.fillStyle = this.roseType === 'yellow' ? '#f1c40f' : (this.roseType === 'white' ? '#ecf0f1' : '#e74c3c');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = this.roseType === 'yellow' ? '#d4ac0d' : (this.roseType === 'white' ? '#bdc3c7' : '#c0392b');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#27ae60';
+        ctx.beginPath();
+        ctx.arc(this.x - 12, this.y + 14, 6, 0, Math.PI * 2);
+        ctx.arc(this.x + 12, this.y + 14, 6, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      if (!rose.isFallen && rose.sticks.every(s => s.broken)) {
-        rose.isFallen = true;
-        wonRoses.push({ color: rose.color, type: rose.type });
+      checkHit(hx, hy) {
+        if (this.isFallen) return false;
+        // Zásah špejle pod růží
+        if (hx >= this.x - 8 && hx <= this.x + 8 && hy >= this.y + 20 && hy <= this.y + this.stemHeight) {
+          this.hitsLeft--;
+          if (this.hitsLeft <= 0) {
+            this.isFallen = true;
+            this.fallSpeed = 2;
+            rosesWon++;
+          }
+          return true;
+        }
+        return false;
       }
-      if (hitSomething) break;
     }
 
-    updateStats();
-
-    const allCleared = targetRoses.every(r => r.isFallen);
-    if (allCleared) {
-      setTimeout(openEndScreen, 800);
-    } else if (ammo === 0) {
-      setTimeout(() => {
-        if (ammo === 0) openShop();
-      }, 500);
+    const targets = [];
+    const colors = ['red', 'yellow', 'white', 'red', 'yellow'];
+    for (let i = 0; i < 5; i++) {
+      targets.push(new RoseTarget(130 + i * 135, 140, colors[i]));
     }
-  }
 
-  function drawPaperRose(ctx, x, y, radius, color) {
-    ctx.save();
-    ctx.translate(x, y);
-    const petals = 7;
-    for (let i = 0; i < petals; i++) {
-      const angle = (i * Math.PI * 2) / petals;
+    // 4. Míření, zpětný ráz a zaměřovač
+    let crosshair = { x: 400, y: 250 };
+    let recoil = { x: 0, y: 0 };
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      crosshair.x = e.clientX - rect.left;
+      crosshair.y = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      crosshair.x = e.touches[0].clientX - rect.left;
+      crosshair.y = e.touches[0].clientY - rect.top;
+    }, { passive: false });
+
+    // Střelba
+    function shoot() {
+      if (ammo <= 0) return;
+      ammo--;
+      recoil.y = -12;
+      recoil.x = (Math.random() - 0.5) * 6;
+
+      const hitX = crosshair.x;
+      const hitY = crosshair.y;
+
+      for (let t of targets) {
+        if (t.checkHit(hitX, hitY)) break;
+      }
+
+      updateHud();
+    }
+
+    canvas.addEventListener('mousedown', shoot);
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      crosshair.x = e.touches[0].clientX - rect.left;
+      crosshair.y = e.touches[0].clientY - rect.top;
+      shoot();
+    }, { passive: false });
+
+    // 5. Hlavní vykreslovací smyčka
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Pozadí maringotky
+      ctx.fillStyle = '#3a2010';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Police pro špejle
+      ctx.fillStyle = '#211105';
+      ctx.fillRect(0, 270, canvas.width, 35);
+      ctx.strokeStyle = '#5a3013';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(0, 270, canvas.width, 35);
+
+      // Terče
+      for (let t of targets) {
+        t.draw();
+      }
+
+      // Tlumení zpětného rázu
+      recoil.x *= 0.82;
+      recoil.y *= 0.82;
+
+      // Zaměřovač (kruh + vodorovná a svislá osa + středová tečka)
+      const curX = crosshair.x + recoil.x;
+      const curY = crosshair.y + recoil.y;
+
+      ctx.strokeStyle = '#e74c3c';
+      ctx.lineWidth = 2;
+
       ctx.beginPath();
-      ctx.arc(Math.cos(angle) * (radius * 0.45), Math.sin(angle) * (radius * 0.45), radius * 0.55, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.arc(curX, curY, 18, 0, Math.PI * 2);
       ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(curX - 26, curY);
+      ctx.lineTo(curX + 26, curY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(curX, curY - 26);
+      ctx.lineTo(curX, curY + 26);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(curX, curY, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#e74c3c';
+      ctx.fill();
+
+      requestAnimationFrame(draw);
     }
-    ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.38, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff3';
-    ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(0, 0, radius * 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = '#222';
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function gameLoop() {
-    recoilOffset.x *= 0.82;
-    recoilOffset.y *= 0.82;
-
-    ctx.fillStyle = '#2b1b12';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#1c110a';
-    ctx.fillRect(0, 565, 1000, 20);
-    ctx.fillRect(0, 425, 1000, 15);
-    ctx.fillRect(0, 290, 1000, 15);
-
-    for (const rose of targetRoses) {
-      for (const stick of rose.sticks) {
-        if (!stick.broken) {
-          ctx.strokeStyle = '#d7b377';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(stick.x, stick.yTop);
-          ctx.lineTo(stick.x, stick.yBottom);
-          ctx.stroke();
+    // 6. Platební brána
+    async function buyAmmo(count) {
+      try {
+        const response = await fetch('/api/payment/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ammoCount: count })
+        });
+        const data = await response.json();
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
         } else {
-          ctx.strokeStyle = '#8b5a2b';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(stick.x, stick.yBottom - 15);
-          ctx.lineTo(stick.x + 6, stick.yBottom);
-          ctx.stroke();
+          alert('Chyba pokladny: ' + (data.error || 'Neznámá chyba'));
         }
-      }
-
-      if (rose.isFallen && rose.fallProgress < 120) {
-        rose.fallProgress += 8;
-      }
-
-      const drawY = rose.y + (rose.isFallen ? rose.fallProgress * 2 : 0);
-      const alpha = Math.max(0, 1 - rose.fallProgress / 100);
-
-      if (alpha > 0) {
-        ctx.globalAlpha = alpha;
-        drawPaperRose(ctx, rose.x, drawY, rose.radius, rose.color);
-        ctx.globalAlpha = 1;
+      } catch (err) {
+        alert('Spojení se serverem selhalo.');
       }
     }
 
-    // DOKONALÝ ZAMĚŘOVAČ: kruh + vodorovný a svislý kříž
-    const curX = crosshair.x + recoilOffset.x;
-    const curY = crosshair.y + recoilOffset.y;
-
-    ctx.strokeStyle = '#e74c3c';
-    ctx.lineWidth = 2;
-
-    // 1. Červený kroužek
-    ctx.beginPath();
-    ctx.arc(curX, curY, 18, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 2. Vodorovná osa (zleva doprava)
-    ctx.beginPath();
-    ctx.moveTo(curX - 26, curY);
-    ctx.lineTo(curX + 26, curY);
-    ctx.stroke();
-
-    // 3. Svislá osa (shora dolů)
-    ctx.beginPath();
-    ctx.moveTo(curX, curY - 26);
-    ctx.lineTo(curX, curY + 26);
-    ctx.stroke();
-
-    // 4. Středová tečka pro přesné míření
-    ctx.beginPath();
-    ctx.arc(curX, curY, 2, 0, Math.PI * 2);
-    ctx.fillStyle = '#e74c3c';
-    ctx.fill();
-
-    requestAnimationFrame(gameLoop);
-  }
-
-  function getCanvasCoords(evt) {
-    const rect = canvas.getBoundingClientRect();
-    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-    return {
-      x: (clientX - rect.left) * (canvas.width / rect.width),
-      y: (clientY - rect.top) * (canvas.height / rect.height)
-    };
-  }
-
-  canvas.addEventListener('mousemove', (e) => {
-    const c = getCanvasCoords(e);
-    crosshair.x = c.x; crosshair.y = c.y;
-  });
-
-  canvas.addEventListener('mousedown', (e) => {
-    const c = getCanvasCoords(e);
-    shoot(c.x, c.y);
-  });
-
-  canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const c = getCanvasCoords(e);
-    crosshair.x = c.x; crosshair.y = c.y;
-    shoot(c.x, c.y);
-  }, { passive: false });
-
-  function openShop() { document.getElementById('shopModal').style.display = 'flex'; }
-  function closeShop() { document.getElementById('shopModal').style.display = 'none'; }
-  
-  async function initiateStripeCheckout(ammoCount) {
-    const statusEl = document.getElementById('shopStatus');
-    const originalText = statusEl.textContent;
-    statusEl.textContent = i18n[currentLang].redirecting;
-    statusEl.style.color = '#f1c40f';
-
-    const buttons = document.querySelectorAll('.shop-btn');
-    buttons.forEach(b => b.disabled = true);
-
-    try {
-      const response = await fetch('/api/payment/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ammoCount })
-      });
-
-      const data = await response.json();
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error(data.error || 'Server nevrátil odkaz na bránu');
-      }
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = i18n[currentLang].errorPayment + err.message;
-      statusEl.style.color = '#e74c3c';
-      buttons.forEach(b => b.disabled = false);
-    }
-  }
-
-  function openEndScreen() {
-    document.getElementById('giftModal').style.display = 'flex';
-    drawCard();
-  }
-  function closeEndScreen() {
-    document.getElementById('giftModal').style.display = 'none';
-  }
-
-  function drawCard() {
-    const card = document.getElementById('cardCanvas');
-    const cCtx = card.getContext('2d');
-    const text = document.getElementById('giftMessage').value;
-
-    cCtx.fillStyle = '#fffdf7';
-    cCtx.fillRect(0, 0, card.width, card.height);
-    cCtx.lineWidth = 6;
-    cCtx.strokeStyle = '#c2a649';
-    cCtx.strokeRect(10, 10, card.width - 20, card.height - 20);
-
-    if (wonRoses.length === 0) {
-      cCtx.fillStyle = '#777';
-      cCtx.font = 'italic 16px serif';
-      cCtx.textAlign = 'center';
-      cCtx.fillText(i18n[currentLang].noRoses, 200, 200);
-    } else {
-      cCtx.strokeStyle = '#27ae60';
-      cCtx.lineWidth = 3;
-      wonRoses.forEach((_, i) => {
-        cCtx.beginPath();
-        cCtx.moveTo(200, 320);
-        cCtx.quadraticCurveTo(180 + (i % 5) * 10, 240, 140 + (i * 35) % 150, 160 + (i * 20) % 80);
-        cCtx.stroke();
-      });
-
-      cCtx.fillStyle = '#c0392b';
-      cCtx.beginPath();
-      cCtx.arc(200, 320, 10, 0, Math.PI * 2);
-      cCtx.fill();
-
-      wonRoses.forEach((rose, i) => {
-        const posX = 130 + (i * 45) % 150;
-        const posY = 130 + (i * 35) % 90;
-        const r = rose.type === 'large' ? 30 : (rose.type === 'medium' ? 22 : 16);
-        drawPaperRose(cCtx, posX, posY, r, rose.color);
-      });
-    }
-
-    cCtx.fillStyle = '#2c3e50';
-    cCtx.font = 'bold 18px "Georgia", serif';
-    cCtx.textAlign = 'center';
-    
-    const words = text.split(' ');
-    let line = '';
-    let y = 375;
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + ' ';
-      if (cCtx.measureText(testLine).width > 340 && n > 0) {
-        cCtx.fillText(line, 200, y);
-        line = words[n] + ' ';
-        y += 24;
-      } else {
-        line = testLine;
-      }
-    }
-    cCtx.fillText(line, 200, y);
-
-    cCtx.font = 'italic 12px sans-serif';
-    cCtx.fillStyle = '#888';
-    cCtx.fillText(i18n[currentLang].cardFooter, 200, 470);
-  }
-
-  function downloadCard() {
-    const card = document.getElementById('cardCanvas');
-    const link = document.createElement('a');
-    link.download = 'vystrelena-ruze.png';
-    link.href = card.toDataURL('image/png');
-    link.click();
-  }
-
-  function restartGame() {
-    sessionStorage.clear();
-    closeEndScreen();
-    spent = 0;
-    ammo = 3;
-    wonRoses = [];
-    initTargets();
-  }
-
-  handlePaymentReturn();
-  setLanguage('cs');
-  initTargets();
-  gameLoop();
-</script>
+    updateHud();
+    draw();
+  </script>
 </body>
 </html>
