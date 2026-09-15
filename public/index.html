@@ -111,7 +111,8 @@
     .shop-btn {
       background: #50311c;
       font-size: 15px;
-      padding: 10px;
+      padding: 12px;
+      border-radius: 8px;
     }
     .shop-btn:hover { background: #694025; }
 
@@ -141,8 +142,8 @@
 
   <header>
     <div class="stats">
-      <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">15</span></div>
-      <div class="stat-badge"><span data-i18n="spent">Útrata</span>: <span id="spentCount" style="color: #e67e22;">15</span> <span data-i18n="currency">Kč</span></div>
+      <div class="stat-badge"><span data-i18n="ammo">Broky</span>: <span id="ammoCount" style="color: #f1c40f;">3</span></div>
+      <div class="stat-badge"><span data-i18n="spent">Útrata</span>: <span id="spentCount" style="color: #e67e22;">0</span> <span data-i18n="currency">Kč</span></div>
       <div class="stat-badge"><span data-i18n="won">Získáno</span>: <span id="wonCount" style="color: #2ecc71;">0</span></div>
     </div>
     <div class="actions">
@@ -160,11 +161,11 @@
   <div class="modal" id="shopModal">
     <div class="modal-content">
       <h2 data-i18n="shopTitle">Pokladna střelnice</h2>
-      <p data-i18n="shopSubtitle">Cena: 1 brok = 1 Kč / 0.04 €</p>
+      <p data-i18n="shopSubtitle" style="color: #e0d0b8; margin-bottom: 15px;">Vyberte si balíček střeliva:</p>
       <div class="shop-options">
-        <button class="shop-btn" onclick="buyAmmo(10)"><span data-i18n="buy10">Koupit 10 broků (10 Kč)</span></button>
-        <button class="shop-btn" onclick="buyAmmo(25)"><span data-i18n="buy25">Koupit 25 broků (25 Kč)</span></button>
-        <button class="shop-btn" onclick="buyAmmo(50)"><span data-i18n="buy50">Koupit 50 broků (50 Kč)</span></button>
+        <button class="shop-btn" onclick="buyAmmo(10, 10)"><span data-i18n="buy10">10 broků – 10 Kč</span></button>
+        <button class="shop-btn" onclick="buyAmmo(25, 20)"><span data-i18n="buy25">25 broků – 20 Kč</span></button>
+        <button class="shop-btn" onclick="buyAmmo(50, 40)"><span data-i18n="buy50">50 broků – 40 Kč</span></button>
       </div>
       <button onclick="closeShop()" style="background:#555; border-color:#777;" data-i18n="backBtn">Zpět ke střelbě</button>
     </div>
@@ -185,7 +186,6 @@
   </div>
 
 <script>
-  // Slovník textů pro jazyky
   const i18n = {
     cs: {
       ammo: "Broky",
@@ -195,17 +195,18 @@
       buyBtn: "Koupit broky",
       finishBtn: "Ukončit a darovat",
       shopTitle: "Pokladna střelnice",
-      shopSubtitle: "Cena: 1 brok = 1 Kč",
-      buy10: "Koupit 10 broků (10 Kč)",
-      buy25: "Koupit 25 broků (25 Kč)",
-      buy50: "Koupit 50 broků (50 Kč)",
+      shopSubtitle: "Vyberte si balíček střeliva:",
+      buy10: "10 broků – 10 Kč",
+      buy25: "25 broků – 20 Kč",
+      buy50: "50 broků – 40 Kč",
       backBtn: "Zpět",
       cardTitle: "Tvoje vystřelené růže",
       downloadBtn: "Stáhnout obrázek",
       restartBtn: "Nová hra",
       defaultDedication: "Stříleno z lásky na pouti ❤️",
       cardFooter: "Vystřeleno z pouťové vzduchovky",
-      noRoses: "Zatím jsi netrefil žádnou růži..."
+      noRoses: "Zatím jsi netrefil žádnou růži...",
+      boughtAlert: "Úspěšně nabito!"
     },
     en: {
       ammo: "Pellets",
@@ -215,17 +216,18 @@
       buyBtn: "Buy Pellets",
       finishBtn: "Finish & Gift",
       shopTitle: "Shooting Gallery Cashier",
-      shopSubtitle: "Price: 1 pellet = 1 CZK",
-      buy10: "Buy 10 pellets (10 CZK)",
-      buy25: "Buy 25 pellets (25 CZK)",
-      buy50: "Buy 50 pellets (50 CZK)",
+      shopSubtitle: "Choose your ammo pack:",
+      buy10: "10 pellets – 10 CZK",
+      buy25: "25 pellets – 20 CZK",
+      buy50: "50 pellets – 40 CZK",
       backBtn: "Back",
       cardTitle: "Your Won Roses",
       downloadBtn: "Download Image",
       restartBtn: "New Game",
       defaultDedication: "Shot with love at the fairground ❤️",
       cardFooter: "Shot with a fairground air rifle",
-      noRoses: "No roses hit yet..."
+      noRoses: "No roses hit yet...",
+      boughtAlert: "Ammo loaded successfully!"
     }
   };
 
@@ -280,8 +282,8 @@
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
-  let ammo = 15;
-  let spent = 15;
+  let ammo = 3;
+  let spent = 0;
   let wonRoses = [];
   let targetRoses = [];
   let crosshair = { x: 500, y: 312 };
@@ -385,15 +387,14 @@
 
     updateStats();
 
-    // Automatický přechod: pokud sestřelil všechno, otevřeme kartu
     const allCleared = targetRoses.every(r => r.isFallen);
     if (allCleared) {
       setTimeout(openEndScreen, 800);
     } else if (ammo === 0) {
-      // Pokud došly broky, dáme 1 vteřinu na rozmyšlenou, pak ukážeme kartu nebo nákup
+      // Došly broky: otevřeme rovnou pokladnu na dokoupení
       setTimeout(() => {
-        if (ammo === 0) openEndScreen();
-      }, 1000);
+        if (ammo === 0) openShop();
+      }, 500);
     }
   }
 
@@ -513,37 +514,12 @@
   function openShop() { document.getElementById('shopModal').style.display = 'flex'; }
   function closeShop() { document.getElementById('shopModal').style.display = 'none'; }
   
- async function buyAmmo(amount) {
-    try {
-      // 1. Zeptáme se našeho serveru na nákup
-      const response = await fetch('/api/payment/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'lokalni_hrac',
-          ammoCount: amount,
-          priceCzk: amount
-        })
-      });
-
-      const data = await response.json();
-
-      // 2. Pokud je zapnutá skutečná brána Stripe, přesměrujeme na platbu
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } 
-      // 3. Pokud zatím testujeme (simulace), přičteme broky
-      else if (data.simulated) {
-        ammo = data.newAmmo;
-        spent = data.newSpent;
-        updateStats();
-        closeShop();
-        alert(`Úspěšně zakoupeno ${amount} broků!`);
-      }
-    } catch (err) {
-      console.error('Chyba při nákupu:', err);
-      alert('Nepodařilo se spojit se serverem.');
-    }
+  // Nákupní logika s balíčky (10 za 10, 25 za 20, 50 za 40)
+  function buyAmmo(amount, price) {
+    ammo += amount;
+    spent += price;
+    updateStats();
+    closeShop();
   }
 
   function openEndScreen() {
@@ -627,8 +603,8 @@
 
   function restartGame() {
     closeEndScreen();
-    spent = 15;
-    ammo = 15;
+    spent = 0;
+    ammo = 3;
     initTargets();
   }
 
