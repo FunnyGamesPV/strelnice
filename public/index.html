@@ -300,7 +300,11 @@
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
-  let ammo = parseInt(sessionStorage.getItem('strelnice_ammo')) || 3;
+  // BEZPEČNÉ NAČTENÍ BROKŮ: Pokud v paměti už hodnota je (i kdyby 0), použije se přesně ona.
+  // 3 broky se dají pouze hráči, který hru otevřel úplně poprvé!
+  let ammo = sessionStorage.getItem('strelnice_ammo') !== null 
+    ? parseInt(sessionStorage.getItem('strelnice_ammo')) 
+    : 3;
   let spent = parseInt(sessionStorage.getItem('strelnice_spent')) || 0;
   let wonRoses = JSON.parse(sessionStorage.getItem('strelnice_won') || '[]');
   let targetRoses = [];
@@ -317,12 +321,16 @@
       spent += addedSpent;
       saveSession();
       window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('payment') === 'cancelled') {
+      // Pokud hráč platbu zrušil, smažeme parametr a otevřeme mu rovnou pokladnu
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (ammo <= 0) setTimeout(openShop, 200);
     }
   }
 
   function saveSession() {
-    sessionStorage.setItem('strelnice_ammo', ammo);
-    sessionStorage.setItem('strelnice_spent', spent);
+    sessionStorage.setItem('strelnice_ammo', ammo.toString());
+    sessionStorage.setItem('strelnice_spent', spent.toString());
     sessionStorage.setItem('strelnice_won', JSON.stringify(wonRoses));
   }
 
@@ -661,6 +669,7 @@
     spent = 0;
     ammo = 3;
     wonRoses = [];
+    saveSession();
     initTargets();
   }
 
@@ -668,6 +677,11 @@
   setLanguage('cs');
   initTargets();
   gameLoop();
+
+  // Pokud se hráč vrátí z platební brány bez střeliva, ihned otevřeme pokladnu
+  if (ammo <= 0) {
+    setTimeout(openShop, 300);
+  }
 </script>
 </body>
 </html>
