@@ -517,16 +517,28 @@
     ctx.strokeStyle = '#e74c3c';
     ctx.lineWidth = 2;
 
+    // Vnější kruh
     ctx.beginPath();
     ctx.arc(curX, curY, 18, 0, Math.PI * 2);
     ctx.stroke();
 
+    // Vodorovná linka
     ctx.beginPath();
     ctx.moveTo(curX - 26, curY);
     ctx.lineTo(curX + 26, curY);
-    ctx.moveTo(curX, curY - 26);
-    ctx.lineTo(curX + 26, curY);
     ctx.stroke();
+
+    // Svislá linka
+    ctx.beginPath();
+    ctx.moveTo(curX, curY - 26);
+    ctx.lineTo(curX, curY + 26);
+    ctx.stroke();
+
+    // Středová tečka
+    ctx.beginPath();
+    ctx.arc(curX, curY, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fill();
 
     requestAnimationFrame(gameLoop);
   }
